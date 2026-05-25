@@ -53,14 +53,14 @@ def login_post():
         conn = get_db()
         cursor = conn.cursor(dictionary=True)
         cursor.execute(
-            'SELECT * FROM Users WHERE Username = %s',
-            (username,)
+            'SELECT * FROM Users WHERE Username = %s AND Password = %s',
+            (username, password)
         )
         user = cursor.fetchone()
         cursor.close()
         conn.close()
 
-        if user and bcrypt.checkpw(password.encode('utf-8'), user['Password'].encode('utf-8')):
+        if user:
             session['user'] = username
             return jsonify({'success': True, 'redirect': '/'}), 200
         else:
