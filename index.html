@@ -1,0 +1,1149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vehicle Service History System</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background-color: #f8f9fb;
+            color: #2d3748;
+            display: flex;
+            height: 100vh;
+        }
+        
+        /* Sidebar */
+        .sidebar {
+            width: 260px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem 1.5rem;
+            overflow-y: auto;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .sidebar h1 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+            font-weight: 700;
+        }
+        
+        .sidebar p {
+            font-size: 0.85rem;
+            opacity: 0.9;
+            margin-bottom: 2rem;
+        }
+        
+        .nav-menu {
+            list-style: none;
+        }
+        
+        .nav-item {
+            margin-bottom: 1rem;
+        }
+        
+        .nav-link {
+            display: block;
+            padding: 0.75rem 1rem;
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+        
+        .nav-link:hover {
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+        }
+        
+        .nav-link.active {
+            background: rgba(255, 255, 255, 0.25);
+            color: white;
+        }
+        
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .header-bar {
+            background: white;
+            padding: 1.5rem 2rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header-bar h2 {
+            font-size: 1.8rem;
+            color: #2d3748;
+        }
+        
+        .content-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 2rem;
+        }
+        
+        /* Pages */
+        .page {
+            display: none;
+        }
+        
+        .page.active {
+            display: block;
+        }
+        
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            transition: all 0.3s;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+        }
+        
+        .stat-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .stat-card h3 {
+            font-size: 0.85rem;
+            color: #718096;
+            text-transform: uppercase;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+        
+        .stat-card .number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #667eea;
+        }
+        
+        /* Charts */
+        .chart-container {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            margin-bottom: 2rem;
+        }
+        
+        .chart-container h3 {
+            margin-bottom: 1rem;
+            color: #2d3748;
+            font-size: 1.2rem;
+        }
+        
+        /* Tables */
+        .table-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            overflow: hidden;
+        }
+        
+        .table-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .table-header h3 {
+            font-size: 1.2rem;
+            color: #2d3748;
+        }
+        
+        .btn {
+            padding: 0.5rem 1.2rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            font-size: 0.9rem;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        table thead {
+            background: #f7fafc;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        
+        table th {
+            padding: 1rem 1.5rem;
+            text-align: left;
+            font-weight: 600;
+            color: #667eea;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+        }
+        
+        table td {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        table tbody tr {
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        table tbody tr:hover {
+            background: #f7fafc;
+        }
+        
+        /* Status Badge */
+        .badge {
+            display: inline-block;
+            padding: 0.4rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        
+        .badge-completed {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        
+        .badge-in-progress {
+            background: #fed7aa;
+            color: #92400e;
+        }
+        
+        .badge-pending {
+            background: #fce7f3;
+            color: #831843;
+        }
+        
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal.active {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        }
+        
+        .modal-content h3 {
+            color: #2d3748;
+            margin-bottom: 1.5rem;
+            font-size: 1.3rem;
+        }
+        
+        .modal-field {
+            margin-bottom: 1rem;
+        }
+        
+        .modal-field label {
+            display: block;
+            font-weight: 600;
+            color: #4a5568;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+        }
+        
+        .modal-field value {
+            display: block;
+            color: #2d3748;
+            padding: 0.5rem 0;
+        }
+        
+        .close-btn {
+            float: right;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #718096;
+            background: none;
+            border: none;
+        }
+        
+        .close-btn:hover {
+            color: #2d3748;
+        }
+        
+        /* Form */
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            color: #4a5568;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+        }
+        
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.95rem;
+            transition: border 0.3s;
+        }
+        
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+        
+        .form-actions button {
+            flex: 1;
+            padding: 0.75rem;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 0.95rem;
+        }
+        
+        .btn-submit {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-cancel {
+            background: #e2e8f0;
+            color: #4a5568;
+        }
+        
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: white;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+            z-index: 2000;
+            display: none;
+            align-items: center;
+            gap: 1rem;
+            animation: slideIn 0.3s ease-out;
+        }
+        
+        .toast.show {
+            display: flex;
+        }
+        
+        .toast.success {
+            border-left: 4px solid #10b981;
+        }
+        
+        .toast.error {
+            border-left: 4px solid #ef4444;
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: #718096;
+        }
+        
+        .empty-state p {
+            font-size: 1.1rem;
+        }
+        
+        @media (max-width: 768px) {
+            body {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                padding: 1rem;
+            }
+            
+            .nav-menu {
+                display: flex;
+                gap: 0.5rem;
+                overflow-x: auto;
+            }
+            
+            .nav-item {
+                margin-bottom: 0;
+            }
+            
+            table th, table td {
+                padding: 0.75rem;
+                font-size: 0.85rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <h1>🚗 VSH</h1>
+        <p>Vehicle Service Hub</p>
+        <ul class="nav-menu">
+            <li class="nav-item">
+                <a class="nav-link active" onclick="showPage('dashboard')">📊 Dashboard</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" onclick="showPage('vehicles')">🚙 Vehicles</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" onclick="showPage('customers')">👥 Customers</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" onclick="showPage('services')">🔧 Services</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" onclick="showPage('mechanics')">🛠️ Mechanics</a>
+            </li>
+        </ul>
+    </div>
+    
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="header-bar">
+            <h2 id="page-title">Dashboard</h2>
+        </div>
+        
+        <div class="content-area">
+            <!-- Dashboard Page -->
+            <div id="dashboard" class="page active">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">👥</div>
+                        <h3>Total Customers</h3>
+                        <div class="number" id="stat-customers">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">🚙</div>
+                        <h3>Total Vehicles</h3>
+                        <div class="number" id="stat-vehicles">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">🔧</div>
+                        <h3>Total Services</h3>
+                        <div class="number" id="stat-services">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">💰</div>
+                        <h3>Total Revenue</h3>
+                        <div class="number" id="stat-revenue">₹0</div>
+                    </div>
+                </div>
+                
+                <div class="chart-container">
+                    <h3>Revenue by Brand</h3>
+                    <canvas id="revenueChart"></canvas>
+                </div>
+                
+                <div class="table-container">
+                    <div class="table-header">
+                        <h3>Recent Services</h3>
+                    </div>
+                    <table id="recent-services-table">
+                        <thead>
+                            <tr>
+                                <th>Service ID</th>
+                                <th>Vehicle</th>
+                                <th>Customer</th>
+                                <th>Date</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Vehicles Page -->
+            <div id="vehicles" class="page">
+                <div class="table-container">
+                    <div class="table-header">
+                        <h3>Vehicles</h3>
+                    </div>
+                    <table id="vehicles-table">
+                        <thead>
+                            <tr>
+                                <th>Reg. No</th>
+                                <th>Brand</th>
+                                <th>Model</th>
+                                <th>Year</th>
+                                <th>Fuel Type</th>
+                                <th>Owner</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Customers Page -->
+            <div id="customers" class="page">
+                <div class="table-container">
+                    <div class="table-header">
+                        <h3>Customers</h3>
+                    </div>
+                    <table id="customers-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Phone</th>
+                                <th>Email</th>
+                                <th>Address</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Services Page -->
+            <div id="services" class="page">
+                <div class="table-container" style="margin-bottom: 2rem;">
+                    <div class="table-header">
+                        <h3>Services</h3>
+                        <button class="btn" onclick="openAddServiceForm()">+ Add Service</button>
+                    </div>
+                    <table id="services-table">
+                        <thead>
+                            <tr>
+                                <th>Service ID</th>
+                                <th>Vehicle</th>
+                                <th>Customer</th>
+                                <th>Date</th>
+                                <th>Type</th>
+                                <th>Mechanic</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Mechanics Page -->
+            <div id="mechanics" class="page">
+                <div class="table-container">
+                    <div class="table-header">
+                        <h3>Mechanics</h3>
+                    </div>
+                    <table id="mechanics-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Speciality</th>
+                                <th>Experience</th>
+                                <th>Phone</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modals -->
+    <div id="detailModal" class="modal">
+        <div class="modal-content">
+            <button class="close-btn" onclick="closeModal()">&times;</button>
+            <div id="modalBody"></div>
+        </div>
+    </div>
+    
+    <div id="addServiceModal" class="modal">
+        <div class="modal-content">
+            <button class="close-btn" onclick="closeAddServiceModal()">&times;</button>
+            <h3>Add New Service</h3>
+            <form id="addServiceForm">
+                <div class="form-group">
+                    <label>Vehicle</label>
+                    <select id="service-vehicle" required>
+                        <option value="">Select Vehicle</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Mechanic</label>
+                    <select id="service-mechanic" required>
+                        <option value="">Select Mechanic</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Service Date</label>
+                    <input type="date" id="service-date" required>
+                </div>
+                <div class="form-group">
+                    <label>Mileage</label>
+                    <input type="number" id="service-mileage" required>
+                </div>
+                <div class="form-group">
+                    <label>Service Type</label>
+                    <input type="text" id="service-type" placeholder="e.g., Oil Change" required>
+                </div>
+                <div class="form-group">
+                    <label>Status</label>
+                    <select id="service-status" required>
+                        <option value="">Select Status</option>
+                        <option value="Pending">Pending</option>
+                        <option value="In Progress">In Progress</option>
+                        <option value="Completed">Completed</option>
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="form-actions button btn-submit">Save Service</button>
+                    <button type="button" class="form-actions button btn-cancel" onclick="closeAddServiceModal()">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Toast -->
+    <div id="toast" class="toast"></div>
+    
+    <script>
+        let vehiclesData = [];
+        let customersData = [];
+        let servicesData = [];
+        let mechanicsData = [];
+        let revenueChart = null;
+        
+        // Show Page
+        function showPage(page) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById(page).classList.add('active');
+            
+            document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            const titles = {
+                dashboard: '📊 Dashboard',
+                vehicles: '🚙 Vehicles',
+                customers: '👥 Customers',
+                services: '🔧 Services',
+                mechanics: '🛠️ Mechanics'
+            };
+            document.getElementById('page-title').textContent = titles[page];
+            
+            if (page === 'dashboard') loadDashboard();
+            else if (page === 'vehicles') loadVehicles();
+            else if (page === 'customers') loadCustomers();
+            else if (page === 'services') loadServices();
+            else if (page === 'mechanics') loadMechanics();
+        }
+        
+        // Fetch Functions
+        async function fetchStats() {
+            try {
+                const response = await fetch('/api/stats');
+                const data = await response.json();
+                document.getElementById('stat-customers').textContent = data.total_customers;
+                document.getElementById('stat-vehicles').textContent = data.total_vehicles;
+                document.getElementById('stat-services').textContent = data.total_services;
+                document.getElementById('stat-revenue').textContent = '₹' + data.total_revenue;
+                return data;
+            } catch (error) {
+                console.error('Error fetching stats:', error);
+            }
+        }
+        
+        async function fetchVehicles() {
+            try {
+                const response = await fetch('/api/vehicles');
+                vehiclesData = await response.json();
+                return vehiclesData;
+            } catch (error) {
+                console.error('Error fetching vehicles:', error);
+            }
+        }
+        
+        async function fetchCustomers() {
+            try {
+                const response = await fetch('/api/customers');
+                customersData = await response.json();
+                return customersData;
+            } catch (error) {
+                console.error('Error fetching customers:', error);
+            }
+        }
+        
+        async function fetchServices() {
+            try {
+                const response = await fetch('/api/services');
+                servicesData = await response.json();
+                return servicesData;
+            } catch (error) {
+                console.error('Error fetching services:', error);
+            }
+        }
+        
+        async function fetchMechanics() {
+            try {
+                const response = await fetch('/api/mechanics');
+                mechanicsData = await response.json();
+                return mechanicsData;
+            } catch (error) {
+                console.error('Error fetching mechanics:', error);
+            }
+        }
+        
+        // Load Dashboard
+        async function loadDashboard() {
+            await fetchStats();
+            await fetchServices();
+            
+            const tbody = document.querySelector('#recent-services-table tbody');
+            tbody.innerHTML = '';
+            
+            servicesData.slice(0, 5).forEach(service => {
+                const row = document.createElement('tr');
+                const statusClass = `badge-${service.Status.toLowerCase().replace(' ', '-')}`;
+                row.innerHTML = `
+                    <td>#${service.ServiceID}</td>
+                    <td>${service.Brand} ${service.Model}</td>
+                    <td>${service.customer_name}</td>
+                    <td>${service.Service_Date}</td>
+                    <td><span class="badge ${statusClass}">${service.Status}</span></td>
+                `;
+                row.onclick = () => showServiceDetail(service);
+                tbody.appendChild(row);
+            });
+            
+            // Create Revenue Chart
+            await createRevenueChart();
+        }
+        
+        async function createRevenueChart() {
+            const response = await fetch('/api/bills');
+            const bills = await response.json();
+            
+            const brandRevenue = {};
+            bills.forEach(bill => {
+                const service = servicesData.find(s => s.ServiceID === bill.ServiceID);
+                if (service) {
+                    const brand = service.Brand;
+                    brandRevenue[brand] = (brandRevenue[brand] || 0) + bill.Amount;
+                }
+            });
+            
+            const ctx = document.getElementById('revenueChart').getContext('2d');
+            if (revenueChart) revenueChart.destroy();
+            
+            revenueChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(brandRevenue),
+                    datasets: [{
+                        label: 'Revenue (₹)',
+                        data: Object.values(brandRevenue),
+                        backgroundColor: 'rgba(102, 126, 234, 0.7)',
+                        borderColor: 'rgba(102, 126, 234, 1)',
+                        borderWidth: 2,
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return '₹' + value;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Load Vehicles
+        async function loadVehicles() {
+            await fetchVehicles();
+            const tbody = document.querySelector('#vehicles-table tbody');
+            tbody.innerHTML = '';
+            
+            vehiclesData.forEach(vehicle => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${vehicle.Reg_No}</td>
+                    <td>${vehicle.Brand}</td>
+                    <td>${vehicle.Model}</td>
+                    <td>${vehicle.Year}</td>
+                    <td>${vehicle.FuelType}</td>
+                    <td>${vehicle.owner_name}</td>
+                `;
+                row.onclick = () => showVehicleDetail(vehicle);
+                tbody.appendChild(row);
+            });
+        }
+        
+        // Load Customers
+        async function loadCustomers() {
+            await fetchCustomers();
+            const tbody = document.querySelector('#customers-table tbody');
+            tbody.innerHTML = '';
+            
+            customersData.forEach(customer => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${customer.First_Name} ${customer.Last_Name}</td>
+                    <td>${customer.Phone || '-'}</td>
+                    <td>${customer.Email || '-'}</td>
+                    <td>${customer.Address || '-'}</td>
+                `;
+                row.onclick = () => showCustomerDetail(customer);
+                tbody.appendChild(row);
+            });
+        }
+        
+        // Load Services
+        async function loadServices() {
+            await fetchServices();
+            const tbody = document.querySelector('#services-table tbody');
+            tbody.innerHTML = '';
+            
+            servicesData.forEach(service => {
+                const row = document.createElement('tr');
+                const statusClass = `badge-${service.Status.toLowerCase().replace(' ', '-')}`;
+                row.innerHTML = `
+                    <td>#${service.ServiceID}</td>
+                    <td>${service.Brand} ${service.Model} (${service.Reg_No})</td>
+                    <td>${service.customer_name}</td>
+                    <td>${service.Service_Date}</td>
+                    <td>${service.Service_Type}</td>
+                    <td>${service.mechanic_name}</td>
+                    <td><span class="badge ${statusClass}">${service.Status}</span></td>
+                `;
+                row.onclick = () => showServiceDetail(service);
+                tbody.appendChild(row);
+            });
+        }
+        
+        // Load Mechanics
+        async function loadMechanics() {
+            await fetchMechanics();
+            const tbody = document.querySelector('#mechanics-table tbody');
+            tbody.innerHTML = '';
+            
+            mechanicsData.forEach(mechanic => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${mechanic.Name}</td>
+                    <td>${mechanic.Speciality || '-'}</td>
+                    <td>${mechanic.Experience || '-'}</td>
+                    <td>${mechanic.Phone || '-'}</td>
+                `;
+                row.onclick = () => showMechanicDetail(mechanic);
+                tbody.appendChild(row);
+            });
+        }
+        
+        // Modal Functions
+        function showModal() {
+            document.getElementById('detailModal').classList.add('active');
+        }
+        
+        function closeModal() {
+            document.getElementById('detailModal').classList.remove('active');
+        }
+        
+        function showVehicleDetail(vehicle) {
+            const html = `
+                <h3>Vehicle Details</h3>
+                <div class="modal-field">
+                    <label>Registration Number:</label>
+                    <value>${vehicle.Reg_No}</value>
+                </div>
+                <div class="modal-field">
+                    <label>Brand:</label>
+                    <value>${vehicle.Brand}</value>
+                </div>
+                <div class="modal-field">
+                    <label>Model:</label>
+                    <value>${vehicle.Model}</value>
+                </div>
+                <div class="modal-field">
+                    <label>Year:</label>
+                    <value>${vehicle.Year}</value>
+                </div>
+                <div class="modal-field">
+                    <label>Fuel Type:</label>
+                    <value>${vehicle.FuelType}</value>
+                </div>
+                <div class="modal-field">
+                    <label>Owner:</label>
+                    <value>${vehicle.owner_name}</value>
+                </div>
+            `;
+            document.getElementById('modalBody').innerHTML = html;
+            showModal();
+        }
+        
+        function showCustomerDetail(customer) {
+            const html = `
+                <h3>Customer Details</h3>
+                <div class="modal-field">
+                    <label>Name:</label>
+                    <value>${customer.First_Name} ${customer.Last_Name}</value>
+                </div>
+                <div class="modal-field">
+                    <label>Phone:</label>
+                    <value>${customer.Phone || '-'}</value>
+                </div>
+                <div class="modal-field">
+                    <label>Email:</label>
+                    <value>${customer.Email || '-'}</value>
+                </div>
+                <div class="modal-field">
+                    <label>Address:</label>
+                    <value>${customer.Address || '-'}</value>
+                </div>
+            `;
+            document.getElementById('modalBody').innerHTML = html;
+            showModal();
+        }
+        
+        function showServiceDetail(service) {
+            const html = `
+                <h3>Service Details</h3>
+                <div class="modal-field">
+                    <label>Service ID:</label>
+                    <value>#${service.ServiceID}</value>
+                </div>
+                <div class="modal-field">
+                    <label>Vehicle:</label>
+                    <value>${service.Brand} ${service.Model} (${service.Reg_No})</value>
+                </div>
+                <div class="modal-field">
+                    <label>Customer:</label>
+                    <value>${service.customer_name}</value>
+                </div>
+                <div class="modal-field">
+                    <label>Date:</label>
+                    <value>${service.Service_Date}</value>
+                </div>
+                <div class="modal-field">
+                    <label>Mileage:</label>
+                    <value>${service.Mileage || '-'}</value>
+                </div>
+                <div class="modal-field">
+                    <label>Type:</label>
+                    <value>${service.Service_Type}</value>
+                </div>
+                <div class="modal-field">
+                    <label>Mechanic:</label>
+                    <value>${service.mechanic_name}</value>
+                </div>
+                <div class="modal-field">
+                    <label>Status:</label>
+                    <value>${service.Status}</value>
+                </div>
+            `;
+            document.getElementById('modalBody').innerHTML = html;
+            showModal();
+        }
+        
+        function showMechanicDetail(mechanic) {
+            const html = `
+                <h3>Mechanic Details</h3>
+                <div class="modal-field">
+                    <label>Name:</label>
+                    <value>${mechanic.Name}</value>
+                </div>
+                <div class="modal-field">
+                    <label>Speciality:</label>
+                    <value>${mechanic.Speciality || '-'}</value>
+                </div>
+                <div class="modal-field">
+                    <label>Experience:</label>
+                    <value>${mechanic.Experience || '-'}</value>
+                </div>
+                <div class="modal-field">
+                    <label>Phone:</label>
+                    <value>${mechanic.Phone || '-'}</value>
+                </div>
+            `;
+            document.getElementById('modalBody').innerHTML = html;
+            showModal();
+        }
+        
+        // Add Service Modal
+        function openAddServiceForm() {
+            const vehicleSelect = document.getElementById('service-vehicle');
+            vehicleSelect.innerHTML = '<option value="">Select Vehicle</option>';
+            vehiclesData.forEach(v => {
+                const option = document.createElement('option');
+                option.value = v.VehicleID;
+                option.textContent = `${v.Brand} ${v.Model} (${v.Reg_No})`;
+                vehicleSelect.appendChild(option);
+            });
+            
+            const mechanicSelect = document.getElementById('service-mechanic');
+            mechanicSelect.innerHTML = '<option value="">Select Mechanic</option>';
+            mechanicsData.forEach(m => {
+                const option = document.createElement('option');
+                option.value = m.MechanicID;
+                option.textContent = m.Name;
+                mechanicSelect.appendChild(option);
+            });
+            
+            document.getElementById('addServiceModal').classList.add('active');
+        }
+        
+        function closeAddServiceModal() {
+            document.getElementById('addServiceModal').classList.remove('active');
+            document.getElementById('addServiceForm').reset();
+        }
+        
+        // Form Submit
+        document.getElementById('addServiceForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = {
+                vehicle_id: parseInt(document.getElementById('service-vehicle').value),
+                mechanic_id: parseInt(document.getElementById('service-mechanic').value),
+                service_date: document.getElementById('service-date').value,
+                mileage: parseInt(document.getElementById('service-mileage').value),
+                service_type: document.getElementById('service-type').value,
+                status: document.getElementById('service-status').value
+            };
+            
+            try {
+                const response = await fetch('/api/services', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
+                
+                if (response.ok) {
+                    showToast('Service added successfully!', 'success');
+                    closeAddServiceModal();
+                    loadServices();
+                } else {
+                    showToast('Error adding service', 'error');
+                }
+            } catch (error) {
+                showToast('Error adding service', 'error');
+            }
+        });
+        
+        // Toast
+        function showToast(message, type) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = `toast ${type} show`;
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+        
+        // Close modal on background click
+        document.getElementById('detailModal').addEventListener('click', (e) => {
+            if (e.target.id === 'detailModal') closeModal();
+        });
+        
+        document.getElementById('addServiceModal').addEventListener('click', (e) => {
+            if (e.target.id === 'addServiceModal') closeAddServiceModal();
+        });
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            loadDashboard();
+        });
+    </script>
+</body>
+</html>
