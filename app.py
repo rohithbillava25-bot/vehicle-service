@@ -12,11 +12,11 @@ app.secret_key = os.getenv('SECRET_KEY', 'vehicleservice123')
 
 def get_db():
     conn = mysql.connector.connect(
-        host=os.getenv('DB_HOST', 'localhost'),
-        port=int(os.getenv('DB_PORT', 3306)),
-        user=os.getenv('DB_USER', 'root'),
-        password=os.getenv('DB_PASSWORD', ''),
-        database=os.getenv('DB_NAME', 'vehicle_service_db')
+        host=os.environ.get('MYSQLHOST', '127.0.0.1'),
+        port=int(os.environ.get('MYSQLPORT', 3306)),
+        user=os.environ.get('MYSQLUSER', 'root'),
+        password=os.environ.get('MYSQLPASSWORD', 'Rohith@2006'),
+        database=os.environ.get('MYSQLDATABASE', 'vehicle_service_db')
     )
     return conn
 
